@@ -17,7 +17,12 @@
                 "args": [
                     "--dataset","${workspaceFolder}\\shapenetcore_partanno_segmentation_benchmark_v0",
                     "--workers","1",
-                    "--nepoch","10",
+                    "--nepoch","1",
+                    
+                    //"--model","${workspaceFolder}\\cls\\cls_model_9.pth" // parameter for classification
+
+                    // "--model","${workspaceFolder}\\seg\\seg_model_Chair_0.pth", // parameter for segmentation
+                    // "--class_choice","Guitar"// parameter for segmentation
                 ]
             },
             "justMyCode": true
