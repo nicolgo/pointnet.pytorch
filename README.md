@@ -17,7 +17,14 @@ cd script
 bash build.sh #build C++ code for visualization
 bash download.sh #download dataset
 ```
+Build dynamic library on Windows
+```
+cd utils
+mkdir build & cd build
+cmake -DCMAKE_GENERATOR_PLATFORM=x64 .. or cmake -A x64 ..
+cmake --build .
 
+```
 Training 
 ```
 cd utils
