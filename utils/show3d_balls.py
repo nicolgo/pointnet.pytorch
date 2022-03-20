@@ -2,6 +2,7 @@ import numpy as np
 import ctypes as ct
 import cv2
 import sys
+import os.path
 showsz = 800
 mousex, mousey = 0.5, 0.5
 zoom = 1.0
@@ -19,7 +20,12 @@ cv2.namedWindow('show3d')
 cv2.moveWindow('show3d', 0, 0)
 cv2.setMouseCallback('show3d', onmouse)
 
-dll = np.ctypeslib.load_library('render_balls_so', '.')
+
+if sys.platform == "win32":
+    dll_path = os.path.dirname(os.path.abspath(__file__)) + os.path.sep + 'render_balls_so.dll'
+    dll = ct.CDLL(dll_path)
+else:
+    dll = np.ctypeslib.load_library('render_balls_so', '.')
 
 def showpoints(xyz,c_gt=None, c_pred = None, waittime=0, 
     showrot=False, magnifyBlue=0, freezerot=False, background=(0,0,0), 
