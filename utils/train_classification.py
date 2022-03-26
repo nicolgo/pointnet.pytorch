@@ -11,7 +11,6 @@ from pointnet.model import PointNetCls, feature_transform_regularizer
 import torch.nn.functional as F
 from tqdm import tqdm
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--batchSize', type=int, default=32, help='input batch size')
@@ -63,7 +62,6 @@ elif opt.dataset_type == 'modelnet40':
 else:
     exit('wrong dataset type')
 
-
 dataloader = torch.utils.data.DataLoader(
     dataset,
     batch_size=opt.batchSize,
@@ -71,10 +69,10 @@ dataloader = torch.utils.data.DataLoader(
     num_workers=int(opt.workers))
 
 testdataloader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=opt.batchSize,
-        shuffle=True,
-        num_workers=int(opt.workers))
+    test_dataset,
+    batch_size=opt.batchSize,
+    shuffle=True,
+    num_workers=int(opt.workers))
 
 print(len(dataset), len(test_dataset))
 num_classes = len(dataset.classes)
@@ -90,14 +88,13 @@ classifier = PointNetCls(k=num_classes, feature_transform=opt.feature_transform)
 if opt.model != '':
     classifier.load_state_dict(torch.load(opt.model))
 
-
 optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
 
-if __name__=="__main__":
+if __name__ == "__main__":
     for epoch in range(opt.nepoch):
         scheduler.step()
         for i, data in enumerate(dataloader, 0):
@@ -115,7 +112,8 @@ if __name__=="__main__":
             optimizer.step()
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).cpu().sum()
-            print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
+            print('[%d: %d/%d] train loss: %f accuracy: %f' % (
+            epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
 
             if i % 10 == 0:
                 j, data = next(enumerate(testdataloader, 0))
@@ -128,13 +126,14 @@ if __name__=="__main__":
                 loss = F.nll_loss(pred, target)
                 pred_choice = pred.data.max(1)[1]
                 correct = pred_choice.eq(target.data).cpu().sum()
-                print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
+                print('[%d: %d/%d] %s loss: %f accuracy: %f' % (
+                epoch, i, num_batch, blue('test'), loss.item(), correct.item() / float(opt.batchSize)))
 
         torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 
     total_correct = 0
     total_testset = 0
-    for i,data in tqdm(enumerate(testdataloader, 0)):
+    for i, data in tqdm(enumerate(testdataloader, 0)):
         points, target = data
         target = target[:, 0]
         points = points.transpose(2, 1)
