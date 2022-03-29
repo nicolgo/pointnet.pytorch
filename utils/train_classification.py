@@ -94,9 +94,35 @@ classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
 
+
+def predict(classifier, testdataloader, loss_fn):
+    classifier.eval()
+    total_correct = 0
+    total_testset = 0
+    total_loss = 0
+    for i, data in tqdm(enumerate(testdataloader, 0)):
+        points, target = data
+        target = target[:, 0]
+        points = points.transpose(2, 1)
+        points, target = points.cuda(), target.cuda()
+        pred, _, _ = classifier(points)
+        loss = loss_fn(pred, target)
+        pred_choice = pred.data.max(1)[1]
+        correct = pred_choice.eq(target.data).cpu().sum()
+        total_correct += correct.item()
+        total_loss += loss.item()
+        total_testset += points.size()[0]
+    # print("final accuracy {}".format(total_correct / float(total_testset)))
+    return total_loss / float(total_testset), total_correct / float(total_testset)
+
+
 if __name__ == "__main__":
+    loss_stats = {'train': [], "test": []}
+    acc_stats = {'train': [], "test": []}
     for epoch in range(opt.nepoch):
         scheduler.step()
+        train_epoch_loss = 0.0
+        train_epoch_acc = 0.0
         for i, data in enumerate(dataloader, 0):
             points, target = data
             target = target[:, 0]
@@ -112,37 +138,67 @@ if __name__ == "__main__":
             optimizer.step()
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).cpu().sum()
-            print('[%d: %d/%d] train loss: %f accuracy: %f' % (
-            epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
+            train_epoch_loss += loss.item()
+            train_epoch_acc += correct.item() / float(opt.batchSize)
+            if (i + 1) % 25 == 0:
+                print('[%d: %d/%d] train loss: %f accuracy: %f' % (
+                    epoch, i + 1, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
 
-            if i % 10 == 0:
-                j, data = next(enumerate(testdataloader, 0))
-                points, target = data
-                target = target[:, 0]
-                points = points.transpose(2, 1)
-                points, target = points.cuda(), target.cuda()
-                classifier = classifier.eval()
-                pred, _, _ = classifier(points)
-                loss = F.nll_loss(pred, target)
-                pred_choice = pred.data.max(1)[1]
-                correct = pred_choice.eq(target.data).cpu().sum()
-                print('[%d: %d/%d] %s loss: %f accuracy: %f' % (
-                epoch, i, num_batch, blue('test'), loss.item(), correct.item() / float(opt.batchSize)))
-
+            # if i % 10 == 0:
+            #     j, data = next(enumerate(testdataloader, 0))
+            #     points, target = data
+            #     target = target[:, 0]
+            #     points = points.transpose(2, 1)
+            #     points, target = points.cuda(), target.cuda()
+            #     classifier = classifier.eval()
+            #     pred, _, _ = classifier(points)
+            #     loss = F.nll_loss(pred, target)
+            #     pred_choice = pred.data.max(1)[1]
+            #     correct = pred_choice.eq(target.data).cpu().sum()
+            #     print('[%d: %d/%d] %s loss: %f accuracy: %f' % (
+            #         epoch, i, num_batch, blue('test'), loss.item(), correct.item() / float(opt.batchSize)))
+        train_epoch_loss_avg = train_epoch_loss / len(dataloader)
+        train_epoch_acc_avg = train_epoch_acc / len(dataloader)
+        loss_stats['train'].append(train_epoch_loss_avg)
+        acc_stats['train'].append(train_epoch_acc_avg)
+        test_loss, test_acc = predict(classifier, testdataloader, F.nll_loss)
+        loss_stats['test'].append(test_loss)
+        acc_stats['test'].append(test_acc)
+        print('[epoch: %d] %s train_loss: %f train_accuracy: %f  %s test_loss: %f test_accuracy: %f' % (
+            epoch, blue('train'), train_epoch_loss_avg, train_epoch_acc_avg, blue('test'), test_loss, test_acc))
         torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 
-    total_correct = 0
-    total_testset = 0
-    for i, data in tqdm(enumerate(testdataloader, 0)):
-        points, target = data
-        target = target[:, 0]
-        points = points.transpose(2, 1)
-        points, target = points.cuda(), target.cuda()
-        classifier = classifier.eval()
-        pred, _, _ = classifier(points)
-        pred_choice = pred.data.max(1)[1]
-        correct = pred_choice.eq(target.data).cpu().sum()
-        total_correct += correct.item()
-        total_testset += points.size()[0]
+    # Create dataframes
+    import pandas as pd
+    import seaborn as sns
+    import matplotlib.pyplot as plt
 
-    print("final accuracy {}".format(total_correct / float(total_testset)))
+    train_test_acc_df = pd.DataFrame.from_dict(acc_stats).reset_index().melt(
+        id_vars=['index']).rename(columns={"index": "epochs"})
+    train_test_loss_df = pd.DataFrame.from_dict(loss_stats).reset_index().melt(
+        id_vars=['index']).rename(columns={"index": "epochs"})
+    # Plot the dataframes
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 7))
+    sns.lineplot(data=train_test_acc_df, x="epochs", y="value",
+                 hue="variable", ax=axes[0]).set_title('Train-Test Accuracy/Epoch')
+    sns.lineplot(data=train_test_loss_df, x="epochs", y="value",
+                 hue="variable", ax=axes[1]).set_title('Train-Test Loss/Epoch')
+    plt.show()
+    _, final_acc = predict(classifier, testdataloader, F.nll_loss)
+    print(f'The final accuracy is {final_acc}')
+
+    # total_correct = 0
+    # total_testset = 0
+    # for i, data in tqdm(enumerate(testdataloader, 0)):
+    #     points, target = data
+    #     target = target[:, 0]
+    #     points = points.transpose(2, 1)
+    #     points, target = points.cuda(), target.cuda()
+    #     classifier = classifier.eval()
+    #     pred, _, _ = classifier(points)
+    #     pred_choice = pred.data.max(1)[1]
+    #     correct = pred_choice.eq(target.data).cpu().sum()
+    #     total_correct += correct.item()
+    #     total_testset += points.size()[0]
+    #
+    # print("final accuracy {}".format(total_correct / float(total_testset)))
