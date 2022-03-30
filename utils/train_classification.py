@@ -7,6 +7,7 @@ import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
 from pointnet.dataset import ShapeNetDataset, ModelNetDataset
+from pointnet.data import ModelNet40
 from pointnet.model import PointNetCls, feature_transform_regularizer
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -49,16 +50,18 @@ if opt.dataset_type == 'shapenet':
         npoints=opt.num_points,
         data_augmentation=False)
 elif opt.dataset_type == 'modelnet40':
-    dataset = ModelNetDataset(
-        root=opt.dataset,
-        npoints=opt.num_points,
-        split='trainval')
-
-    test_dataset = ModelNetDataset(
-        root=opt.dataset,
-        split='test',
-        npoints=opt.num_points,
-        data_augmentation=False)
+    # dataset = ModelNetDataset(
+    #     root=opt.dataset,
+    #     npoints=opt.num_points,
+    #     split='trainval')
+    #
+    # test_dataset = ModelNetDataset(
+    #     root=opt.dataset,
+    #     split='test',
+    #     npoints=opt.num_points,
+    #     data_augmentation=False)
+    dataset = ModelNet40(partition='train', num_points=opt.num_points)
+    test_dataset = ModelNet40(partition='test', num_points=opt.num_points)
 else:
     exit('wrong dataset type')
 
@@ -77,6 +80,7 @@ testdataloader = torch.utils.data.DataLoader(
 print(len(dataset), len(test_dataset))
 num_classes = len(dataset.classes)
 print('classes', num_classes)
+
 
 try:
     os.makedirs(opt.outf)
