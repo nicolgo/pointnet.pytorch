@@ -1,7 +1,7 @@
 # PointNet.pytorch
 This repo is implementation for PointNet(https://arxiv.org/abs/1612.00593) in pytorch. The model is in `pointnet/model.py`.
 
-It is tested with pytorch-1.0.
+The project is forked from point.pytorch(https://github.com/fxia22/pointnet.pytorch.git)
 
 # Download data and running
 
@@ -11,7 +11,7 @@ cd pointnet.pytorch
 pip install -e .
 ```
 
-Download and build visualization tool(Linux)
+Download and build visualization tool (Linux)
 ```
 cd script
 bash build.sh #build C++ code for visualization
