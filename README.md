@@ -23,7 +23,6 @@ cd utils
 mkdir build & cd build
 cmake -DCMAKE_GENERATOR_PLATFORM=x64 .. or cmake -A x64 ..
 cmake --build .
-
 ```
 Training(for modelnet40, `dataset path` is useless since we rewrite the code getting modelnet40 dataset)
 ```
