@@ -124,7 +124,7 @@ class PointNetfeat(nn.Module):
         x = F.relu(self.bn2(self.conv2(x)))
         x = self.bn3(self.conv3(x))
 
-        self.use_more_features = True
+        # self.use_more_features = True
         if self.use_more_features:
             x_max = torch.max(x, 2, keepdim=True)[0]
             x_min = torch.min(x, 2, keepdim=True)[0]
