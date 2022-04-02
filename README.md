@@ -1,7 +1,7 @@
 # PointNet.pytorch
-This repo is implementation for PointNet(https://arxiv.org/abs/1612.00593) in pytorch. The model is in `pointnet/model.py`.
+This repo is implementation for [PointNet](https://arxiv.org/abs/1612.00593) in pytorch. The model is in `pointnet/model.py`.
 
-The project is forked from point.pytorch(https://github.com/fxia22/pointnet.pytorch.git)
+The project is forked from [point.pytorch](https://github.com/fxia22/pointnet.pytorch.git)
 
 # Download data and running
 
